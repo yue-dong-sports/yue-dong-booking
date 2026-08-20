@@ -723,8 +723,8 @@
                 </div>
             </div>
 
-            <div id="records-table-container" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div id="records-table-container" class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100 space-y-4">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                     <h3 class="text-base font-bold text-slate-800">
                         <i class="fa-solid fa-receipt text-[#5b50e6] mr-2"></i>紀錄與申請清單
                     </h3>
@@ -741,22 +741,22 @@
                             <input type="text" id="records-search-input" oninput="window.handleRecordSearch(this.value)" placeholder="搜尋日期、電話、Email、場地或備註..." class="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#5b50e6] w-full sm:w-64 transition">
                         </div>
 
-                        <div class="inline-flex bg-slate-100 p-1 rounded-xl">
-                            <button type="button" id="btn-record-type-single" onclick="window.switchRecordType('single')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-[#5b50e6] shadow-sm">
+                        <div class="inline-flex bg-slate-100 p-1 rounded-xl overflow-x-auto max-w-full">
+                            <button type="button" id="btn-record-type-single" onclick="window.switchRecordType('single')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-[#5b50e6] shadow-sm whitespace-nowrap flex-shrink-0">
                                 單次預約紀錄
                             </button>
-                            <button type="button" id="btn-record-type-lottery" onclick="window.switchRecordType('lottery')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900">
+                            <button type="button" id="btn-record-type-lottery" onclick="window.switchRecordType('lottery')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 whitespace-nowrap flex-shrink-0">
                                 抽籤登記與結果
                             </button>
-                            <button type="button" id="btn-record-type-longterm" onclick="window.switchRecordType('longterm')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900">
+                            <button type="button" id="btn-record-type-longterm" onclick="window.switchRecordType('longterm')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 whitespace-nowrap flex-shrink-0">
                                 長租意願申請單
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div id="view-single-records" class="overflow-x-auto">
-                    <table class="w-full text-left text-xs sm:text-sm">
+                <div id="view-single-records" class="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                    <table class="w-full min-w-[720px] text-left text-xs sm:text-sm whitespace-nowrap">
                         <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
                             <tr>
                                 <th class="py-3 px-4 w-10">
@@ -776,8 +776,8 @@
                     </table>
                 </div>
 
-                <div id="view-lottery-records" class="hidden overflow-x-auto">
-                    <table class="w-full text-left text-xs sm:text-sm">
+                <div id="view-lottery-records" class="hidden overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                    <table class="w-full min-w-[650px] text-left text-xs sm:text-sm whitespace-nowrap">
                         <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
                             <tr>
                                 <th class="py-3 px-4">預約目標日期</th>
@@ -793,8 +793,8 @@
                     </table>
                 </div>
 
-                <div id="view-longterm-records" class="hidden overflow-x-auto">
-                    <table class="w-full text-left text-xs sm:text-sm">
+                <div id="view-longterm-records" class="hidden overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                    <table class="w-full min-w-[680px] text-left text-xs sm:text-sm whitespace-nowrap">
                         <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
                             <tr>
                                 <th class="py-3 px-4">開始日期 / 每週</th>
