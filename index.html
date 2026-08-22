@@ -62,7 +62,7 @@
                     </button>
 
                     <!-- 通知下拉選單 Popover -->
-                    <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-72 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 text-slate-800 z-50 overflow-hidden">
+					<div id="notification-dropdown" class="hidden fixed left-4 right-4 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 text-slate-800 z-50 overflow-hidden">
                         <div class="p-3.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                             <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                                 <i class="fa-solid fa-bell text-[#5b50e6]"></i>
@@ -339,7 +339,7 @@
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">備註需求 (選填)</label>
-                            <textarea id="input-note" rows="2" placeholder="如需租借球具請在此註記" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-800 focus:outline-none focus:border-[#5b50e6] resize-none"></textarea>
+                            <textarea id="input-note" rows="2" placeholder="如時段有客製化加時需求，例如2.5h，請在此註記" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-800 focus:outline-none focus:border-[#5b50e6] resize-none"></textarea>
                         </div>
 
                         <div class="border-t border-slate-100 pt-4 space-y-2 text-xs sm:text-sm">
@@ -2579,9 +2579,239 @@
                 }
             }
         }
+		
+		// 🎲 自動執行到期抽籤開獎邏輯
+        async function processDueLotteryDraws() {
+            // 🌟 僅在管理員身分登入後執行，避免一般球友權限不足引發報錯
+            if (!isAdmin || !currentUser) return;
 
+            const todayStr = getTaiwanDateStr();
+            console.log(`[🎲抽籤開獎檢查] 管理員登入中，今日基準日期: ${todayStr}`);
+            try {
+                // 1. 抓取所有等待開獎之登記單
+                const q = query(
+                    collection(db, 'lottery_entries'),
+                    where('status', '==', '等待開獎中')
+                );
+                const snap = await getDocs(q);
+                if (snap.empty) {
+                    console.log("[🎲抽籤開獎檢查] 目前無任何「等待開獎中」的抽籤登記。");
+                    return;
+                }
+
+                const allPending = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                // 2. 濾出開獎日期 <= 今日的登記單 (過濾中文與多餘字元)
+                const dueEntries = allPending.filter(e => {
+                    const rawDraw = (e.drawDate || '').trim();
+                    const match = rawDraw.match(/\d{4}-\d{2}-\d{2}/);
+                    const cleanDate = match ? match[0] : rawDraw;
+                    return cleanDate && cleanDate <= todayStr;
+                });
+
+                if (dueEntries.length === 0) {
+                    console.log("[🎲抽籤開獎檢查] 尚無達到或超過開獎日的抽籤登記。");
+                    return;
+                }
+
+                console.log(`[🎲抽籤開獎檢查] 找到 ${dueEntries.length} 筆到期抽籤登記，開始結算...`, dueEntries);
+
+                // 3. 取得目前正式預約訂單以比對時段佔用
+                const existingBookingsQ = query(collection(db, 'bookings'), where('date', '>=', todayStr));
+                const bSnap = await getDocs(existingBookingsQ);
+                const activeBookings = bSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(b => isBookingHoldingCourt(b));
+
+                // 4. 依「目標日期 + 時段」分組
+                const groups = {};
+                dueEntries.forEach(entry => {
+                    let sInterval = extractTimeIntervalFromItem(entry);
+                    if (sInterval.startMin === 0 && sInterval.endMin === 0) {
+                        const slots = getCurrentSlots(entry.targetDate);
+                        const sObj = slots.find(s => s.id === entry.slotId);
+                        if (sObj) {
+                            sInterval = {
+                                startMin: timeToMinutes(sObj.startTime),
+                                endMin: timeToMinutes(sObj.endTime)
+                            };
+                        }
+                    }
+                    const timeKey = `${sInterval.startMin}_${sInterval.endMin}`;
+                    const groupKey = `${entry.targetDate}__${timeKey}`;
+
+                    if (!groups[groupKey]) {
+                        groups[groupKey] = {
+                            targetDate: entry.targetDate,
+                            startMin: sInterval.startMin,
+                            endMin: sInterval.endMin,
+                            basketballEntries: [],
+                            badmintonEntries: []
+                        };
+                    }
+
+                    if (entry.courtMode === 'basketball') {
+                        groups[groupKey].basketballEntries.push(entry);
+                    } else {
+                        groups[groupKey].badmintonEntries.push(entry);
+                    }
+                });
+
+                const batch = writeBatch(db);
+                const nowTimeIso = new Date().toISOString();
+                const deadlineIso = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                let drawCount = 0;
+
+                for (const groupKey in groups) {
+                    const g = groups[groupKey];
+                    const targetDate = g.targetDate;
+
+                    // 檢查是否已有正式預約衝突
+                    const dayBookings = activeBookings.filter(b => b.date === targetDate);
+                    let baskOccupied = false;
+                    let usedBadmCourts = [];
+
+                    dayBookings.forEach(b => {
+                        const bInterval = extractTimeIntervalFromItem(b);
+                        if (isIntervalOverlap(g.startMin, g.endMin, bInterval.startMin, bInterval.endMin)) {
+                            if (b.courtMode === 'basketball') baskOccupied = true;
+                            if (b.courtMode === 'badminton' && Array.isArray(b.assignedCourts)) {
+                                usedBadmCourts.push(...b.assignedCourts);
+                            }
+                        }
+                    });
+
+                    // 🏀 籃球抽籤處理
+                    if (g.basketballEntries.length > 0) {
+                        if (!baskOccupied && usedBadmCourts.length === 0) {
+                            const winnerIndex = Math.floor(Math.random() * g.basketballEntries.length);
+                            g.basketballEntries.forEach((entry, idx) => {
+                                const entryRef = doc(db, 'lottery_entries', entry.id);
+                                if (idx === winnerIndex) {
+                                    batch.update(entryRef, { status: '恭喜中籤', drawnAt: nowTimeIso });
+
+                                    const slots = getCurrentSlots(entry.targetDate);
+                                    const sObj = slots.find(s => s.id === entry.slotId);
+                                    const startTime = entry.startTime || (sObj ? sObj.startTime : '20:00');
+                                    const endTime = entry.endTime || (sObj ? sObj.endTime : '22:00');
+
+                                    const newBookingRef = doc(collection(db, 'bookings'));
+                                    batch.set(newBookingRef, {
+                                        date: entry.targetDate,
+                                        courtMode: 'basketball',
+                                        courtName: '籃球全場',
+                                        assignedCourts: [],
+                                        slotId: entry.slotId || `slot-${startTime}`,
+                                        slotDetails: entry.slotDetails || `${startTime} - ${endTime} (2h)`,
+                                        startTime: startTime,
+                                        endTime: endTime,
+                                        bookerPhone: entry.bookerPhone || '',
+                                        note: `[🎲抽籤中籤自動轉入] ${entry.note || ''}`,
+                                        totalPrice: entry.totalPrice || 0,
+                                        userId: entry.userId,
+                                        userEmail: entry.userEmail || '',
+                                        status: 'pending_payment',
+                                        paymentDeadline: deadlineIso,
+                                        bankLast5: '',
+                                        createdAt: nowTimeIso
+                                    });
+
+                                    if (entry.userId) {
+                                        const notifRef = doc(collection(db, 'notifications'));
+                                        batch.set(notifRef, {
+                                            userId: entry.userId,
+                                            title: '🎉 恭喜中籤！籃球全場預約已成立',
+                                            message: `您登記的【 ${entry.targetDate} (${entry.slotDetails || ''}) 】已成功中籤！場地已為您保留 24 小時，請至「預約紀錄」完成匯款末5碼填寫。`,
+                                            isRead: false,
+                                            createdAt: nowTimeIso
+                                        });
+                                    }
+                                } else {
+                                    batch.update(entryRef, { status: '未中籤', drawnAt: nowTimeIso });
+                                    if (entry.userId) {
+                                        const notifRef = doc(collection(db, 'notifications'));
+                                        batch.set(notifRef, {
+                                            userId: entry.userId,
+                                            title: '🎲 球場抽籤結果通知',
+                                            message: `很抱歉，您登記的【 ${entry.targetDate} (${entry.slotDetails || ''}) 籃球全場 】本次未中籤。`,
+                                            isRead: false,
+                                            createdAt: nowTimeIso
+                                        });
+                                    }
+                                }
+                                drawCount++;
+                            });
+
+                            // 籃球中籤後，同時間登記的羽球全部標為未中籤
+                            g.badmintonEntries.forEach(entry => {
+                                batch.update(doc(db, 'lottery_entries', entry.id), { status: '未中籤', drawnAt: nowTimeIso });
+                                drawCount++;
+                            });
+                        } else {
+                            g.basketballEntries.forEach(entry => {
+                                batch.update(doc(db, 'lottery_entries', entry.id), { status: '未中籤', drawnAt: nowTimeIso });
+                                drawCount++;
+                            });
+                        }
+                    } else if (g.badmintonEntries.length > 0) {
+                        // 🏸 羽球抽籤處理
+                        let availCourts = baskOccupied ? [] : ALL_BADMINTON_COURTS.filter(c => !usedBadmCourts.includes(c));
+                        const shuffled = [...g.badmintonEntries].sort(() => Math.random() - 0.5);
+
+                        shuffled.forEach(entry => {
+                            const entryRef = doc(db, 'lottery_entries', entry.id);
+                            const reqCount = (entry.assignedCourts && entry.assignedCourts.length) || 1;
+
+                            if (availCourts.length >= reqCount) {
+                                const assigned = availCourts.slice(0, reqCount);
+                                availCourts = availCourts.slice(reqCount);
+
+                                batch.update(entryRef, { status: '恭喜中籤', assignedCourts: assigned, drawnAt: nowTimeIso });
+
+                                const slots = getCurrentSlots(entry.targetDate);
+                                const sObj = slots.find(s => s.id === entry.slotId);
+                                const startTime = entry.startTime || (sObj ? sObj.startTime : '18:00');
+                                const endTime = entry.endTime || (sObj ? sObj.endTime : '20:00');
+
+                                const newBookingRef = doc(collection(db, 'bookings'));
+                                batch.set(newBookingRef, {
+                                    date: entry.targetDate,
+                                    courtMode: 'badminton',
+                                    courtName: `羽球場 (${assigned.join(', ')})`,
+                                    assignedCourts: assigned,
+                                    slotId: entry.slotId || `slot-${startTime}`,
+                                    slotDetails: entry.slotDetails || `${startTime} - ${endTime} (2h)`,
+                                    startTime: startTime,
+                                    endTime: endTime,
+                                    bookerPhone: entry.bookerPhone || '',
+                                    note: `[🎲抽籤中籤自動轉入] ${entry.note || ''}`,
+                                    totalPrice: entry.totalPrice || 0,
+                                    userId: entry.userId,
+                                    userEmail: entry.userEmail || '',
+                                    status: 'pending_payment',
+                                    paymentDeadline: deadlineIso,
+                                    bankLast5: '',
+                                    createdAt: nowTimeIso
+                                });
+                            } else {
+                                batch.update(entryRef, { status: '未中籤', drawnAt: nowTimeIso });
+                            }
+                            drawCount++;
+                        });
+                    }
+                }
+
+                if (drawCount > 0) {
+                    await batch.commit();
+                    console.log(`[🎲抽籤開獎完成] 共結算 ${drawCount} 筆抽籤。`);
+                }
+            } catch (err) {
+                console.error("[🎲抽籤開獎異常報錯]:", err);
+            }
+        }
+		
         async function fetchAllData() {
             try {
+				await processDueLotteryDraws();
+				
                 const todayStr = getTaiwanDateStr();
                 const nowTime = new Date().getTime(); // 🌟 新增：目前時間戳記
                 const bookingMap = new Map();
