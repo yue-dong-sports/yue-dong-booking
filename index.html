@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>躍動綜合球館 - 全場籃球 / 四分區羽球多功能場地租借</title>
+    <title>躍動綜合球館</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -48,7 +48,7 @@
                         躍動綜合球館
                     </h1>
                     <!-- 手機版隱藏超長副標，平板以上才顯示 -->
-                    <p class="text-xs text-indigo-200 hidden sm:block">全場籃球 / 四分區羽球多功能場地租借</p>
+                    <p class="text-xs text-indigo-200 hidden sm:block">全場籃球 / 四分區羽球場</p>
                 </div>
             </div>
 
@@ -124,6 +124,25 @@
 </header>
 
     <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-1">
+
+        <!-- 📢 重要公佈欄 (動態載入) -->
+        <div id="announcement-board-container" class="hidden bg-gradient-to-r from-indigo-900 via-[#5b50e6] to-indigo-800 text-white p-5 rounded-2xl shadow-md border border-indigo-700/50 space-y-3 relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 text-white/5 text-9xl pointer-events-none">
+                <i class="fa-solid fa-bullhorn"></i>
+            </div>
+            <div class="flex items-center justify-between border-b border-white/15 pb-3 relative z-10">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-sm shadow">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <h2 class="text-sm sm:text-base font-extrabold tracking-wide">球館重要公告與即時事項</h2>
+                </div>
+                <span class="text-[11px] bg-white/15 px-2.5 py-1 rounded-lg text-indigo-100 font-semibold backdrop-blur-sm">Official Announcements</span>
+            </div>
+            <div id="announcement-list-body" class="space-y-3 relative z-10">
+                <!-- 動態渲染公告項目 -->
+            </div>
+        </div>
 
         <!-- 黃色預約須知提示框 -->
         <div id="booking-notice-box" class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl shadow-sm flex items-start space-x-3 transition-all">
@@ -890,6 +909,9 @@
                     <button type="button" id="settings-subtab-btn-broadcast" onclick="window.switchSettingsSubTab('broadcast')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
                         📢 站內廣播
                     </button>
+                    <button type="button" id="settings-subtab-btn-announcement" onclick="window.switchSettingsSubTab('announcement')" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+                        📌 公告管理
+                    </button>
                 </div>
 
                 <!-- 子分頁 1: 特權名單 -->
@@ -1278,6 +1300,73 @@
                                     <tr>
                                         <td colspan="6" class="py-6 text-center text-slate-400">尚無發布紀錄</td>
                                     </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+				
+				<!-- 子分頁 7: 📌 公告管理面板 -->
+                <div id="settings-card-announcement" class="hidden bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                        <div class="flex items-center space-x-2 text-slate-800">
+                            <div class="w-8 h-8 rounded-lg bg-[#5b50e6] text-white flex items-center justify-center font-bold text-sm">
+                                <i class="fa-solid fa-thumbtack"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">首頁公佈欄事項管理</h3>
+                                <p class="text-[11px] text-slate-500">發布或編輯置頂公告，將會即時同步顯示於球館首頁最上方公佈欄。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form onsubmit="window.handleSaveAnnouncement(event)" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                        <input type="hidden" id="announcement-edit-id" value="">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">公告標題 <span class="text-rose-500">*</span></label>
+                            <input type="text" id="announcement-input-title" required placeholder="例如：【重要公告】球場地板年度保養與休館通知" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 font-bold focus:outline-none focus:border-[#5b50e6]">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">公告詳細內容 <span class="text-rose-500">*</span></label>
+                            <textarea id="announcement-input-content" rows="3" required placeholder="請在此輸入詳細公告事項..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#5b50e6] resize-none"></textarea>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-1">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="announcement-input-pinned" class="rounded text-[#5b50e6] focus:ring-[#5b50e6] w-4 h-4" checked>
+                                <span class="text-xs font-bold text-slate-700">置頂顯示 (Pin to top)</span>
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="announcement-cancel-edit-btn" onclick="window.resetAnnouncementForm()" class="hidden px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                                    取消編輯
+                                </button>
+                                <button type="submit" class="px-5 py-2 bg-[#5b50e6] hover:bg-[#4a3ecb] text-white font-bold text-xs rounded-xl shadow transition">
+                                    💾 發布公告
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                        <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-100 pb-2.5">
+                            <i class="fa-solid fa-list text-[#5b50e6]"></i>
+                            <span>目前已發布公告列表</span>
+                        </h4>
+                        <div class="overflow-x-auto max-h-64">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-500 sticky top-0 border-b border-slate-200">
+                                    <tr>
+                                        <th class="py-2.5 px-3">狀態</th>
+                                        <th class="py-2.5 px-3">發布日期</th>
+                                        <th class="py-2.5 px-3">標題</th>
+                                        <th class="py-2.5 px-3">內容</th>
+                                        <th class="py-2.5 px-3">發布者</th> <!-- 🌟 新增發布者欄位 -->
+                                        <th class="py-2.5 px-3 text-center">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="announcement-manage-table-body" class="divide-y divide-slate-100 text-slate-700">
+                                    <tr><td colspan="6" class="py-6 text-center text-slate-400">尚無任何公告</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -2149,6 +2238,8 @@
                 updateSummary();
                 window.updateLtSummary();
                 window.updateLtAdminView();
+				
+				await fetchAnnouncements();
             } catch (err) {
                 console.error("Initialization error:", err);
             }
@@ -2752,7 +2843,7 @@
                             });
                         }
                     } else if (g.badmintonEntries.length > 0) {
-                        // 🏸 羽球抽籤處理
+                        // 🏸 羽球抽籤處理 (改進版：有多少剩餘場地就分配多少，讓大家都有機會)
                         let availCourts = baskOccupied ? [] : ALL_BADMINTON_COURTS.filter(c => !usedBadmCourts.includes(c));
                         const shuffled = [...g.badmintonEntries].sort(() => Math.random() - 0.5);
 
@@ -2760,16 +2851,26 @@
                             const entryRef = doc(db, 'lottery_entries', entry.id);
                             const reqCount = (entry.assignedCourts && entry.assignedCourts.length) || 1;
 
-                            if (availCourts.length >= reqCount) {
-                                const assigned = availCourts.slice(0, reqCount);
-                                availCourts = availCourts.slice(reqCount);
+                            // 🌟 只要場地還有空（大於 0 面），就盡量分配給他（最多分配到他原本的需求量）
+                            if (availCourts.length > 0) {
+                                const allocateCount = Math.min(availCourts.length, reqCount);
+                                const assigned = availCourts.slice(0, allocateCount);
+                                availCourts = availCourts.slice(allocateCount);
 
-                                batch.update(entryRef, { status: '恭喜中籤', assignedCourts: assigned, drawnAt: nowTimeIso });
+                                // 判斷是否為「部分中籤」
+                                const isPartial = allocateCount < reqCount;
+                                const statusMsg = isPartial ? `恭喜中籤 (部分分配 ${allocateCount} 面)` : '恭喜中籤';
+
+                                batch.update(entryRef, { status: statusMsg, assignedCourts: assigned, drawnAt: nowTimeIso });
 
                                 const slots = getCurrentSlots(entry.targetDate);
                                 const sObj = slots.find(s => s.id === entry.slotId);
                                 const startTime = entry.startTime || (sObj ? sObj.startTime : '18:00');
                                 const endTime = entry.endTime || (sObj ? sObj.endTime : '20:00');
+
+                                // 依實際分到的面數比例調整總金額 (假設原本價格是等比的)
+                                const unitPricePerCourt = (entry.totalPrice && reqCount > 0) ? (entry.totalPrice / reqCount) : 0;
+                                const adjustedPrice = unitPricePerCourt * allocateCount;
 
                                 const newBookingRef = doc(collection(db, 'bookings'));
                                 batch.set(newBookingRef, {
@@ -2782,8 +2883,8 @@
                                     startTime: startTime,
                                     endTime: endTime,
                                     bookerPhone: entry.bookerPhone || '',
-                                    note: `[🎲抽籤中籤自動轉入] ${entry.note || ''}`,
-                                    totalPrice: entry.totalPrice || 0,
+                                    note: `[🎲抽籤中籤${isPartial ? `(原登記${reqCount}面改分${allocateCount}面)` : ''}] ${entry.note || ''}`,
+                                    totalPrice: adjustedPrice,
                                     userId: entry.userId,
                                     userEmail: entry.userEmail || '',
                                     status: 'pending_payment',
@@ -2791,8 +2892,30 @@
                                     bankLast5: '',
                                     createdAt: nowTimeIso
                                 });
+
+                                if (entry.userId) {
+                                    const notifRef = doc(collection(db, 'notifications'));
+                                    batch.set(notifRef, {
+                                        userId: entry.userId,
+                                        title: isPartial ? '🎉 抽籤結果：部分場地中籤' : '🎉 恭喜中籤！羽球場預約已成立',
+                                        message: `您登記的【 ${entry.targetDate} 羽球場 】經抽籤為您成功分配到 ${allocateCount} 面場地 (${assigned.join(', ')})！請至「預約紀錄」完成匯款。`,
+                                        isRead: false,
+                                        createdAt: nowTimeIso
+                                    });
+                                }
                             } else {
+                                // 若完全沒有場地了才判未中籤
                                 batch.update(entryRef, { status: '未中籤', drawnAt: nowTimeIso });
+                                if (entry.userId) {
+                                    const notifRef = doc(collection(db, 'notifications'));
+                                    batch.set(notifRef, {
+                                        userId: entry.userId,
+                                        title: '🎲 球場抽籤結果通知',
+                                        message: `很抱歉，您登記的【 ${entry.targetDate} 羽球場 】因該時段場地已全數額滿，本次未能分配到場地。`,
+                                        isRead: false,
+                                        createdAt: nowTimeIso
+                                    });
+                                }
                             }
                             drawCount++;
                         });
@@ -4487,7 +4610,7 @@
                     const sStart = timeToMinutes(slot.startTime);
                     const sEnd = timeToMinutes(slot.endTime);
 
-                    // 🌟 1. 檢查自己是否已預約（0~6天或長租）
+                    // 1. 檢查自己是否已預約（0~6天或長租）
                     const userHasBooking = currentUser && allBookingsList.some(b => 
                         b.userId === currentUser.uid && 
                         b.date === selectedDate && 
@@ -4495,7 +4618,7 @@
                         isIntervalOverlap(sStart, sEnd, extractTimeIntervalFromItem(b).startMin, extractTimeIntervalFromItem(b).endMin)
                     );
 
-                    // 🌟 2. 檢查自己是否已參加該時段抽籤（7~13天）
+                    // 2. 檢查自己是否已參加該時段抽籤（7~13天）
                     const userHasLottery = isLotteryMode && currentUser && allLotteryEntries.some(e => 
                         e.userId === currentUser.uid && 
                         e.targetDate === selectedDate && 
@@ -4503,10 +4626,23 @@
                         e.status === '等待開獎中'
                     );
 
+                    // 🌟 3. 檢查該時段是否已被管理者（或其他訂單）佔用/衝突
+                    let isConflictOccupied = false;
+                    if (courtMode === 'basketball') {
+                        if (!avail.basketballAvailable) isConflictOccupied = true;
+                    } else {
+                        if (avail.remainingBadmintonCount === 0) isConflictOccupied = true;
+                    }
+
                     let tag = '';
+                    let isDisabledOption = false;
+
                     if (isLotteryMode) {
                         if (userHasLottery) {
                             tag = '(🎲 您已參加抽籤)';
+                        } else if (isConflictOccupied) {
+                            tag = '(⚠️ 時段已被預約，無法抽籤)';
+                            isDisabledOption = true; // 標記為不可選
                         } else {
                             tag = '(🟢 抽籤開放中)';
                         }
@@ -4526,7 +4662,8 @@
                         }
                     }
 
-                    return `<option value="${slot.id}" ${slot.id === selectedSlotId ? 'selected' : ''}>${slot.displayLabel} ${tag}</option>`;
+                    // 🌟 如果該時段已被佔用，加上 disabled 屬性讓使用者無法選取
+                    return `<option value="${slot.id}" ${slot.id === selectedSlotId ? 'selected' : ''} ${isDisabledOption ? 'disabled class="text-slate-400 bg-slate-100"' : ''}>${slot.displayLabel} ${tag}</option>`;
                 }).join('');
             }
         }
@@ -6965,6 +7102,208 @@
                 toast.classList.add('opacity-0');
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
+        };
+		
+		// 🌟 // 🌟 擴充子分頁切換以支援公告管理
+        const originalSwitchSettingsSubTab = window.switchSettingsSubTab;
+        window.switchSettingsSubTab = function(subTab) {
+            if (originalSwitchSettingsSubTab) {
+                settingsActiveSubTab = subTab;
+                const subTabs = ['roles', 'rates', 'schedule', 'users', 'reports', 'broadcast', 'announcement'];
+                subTabs.forEach(t => {
+                    const cardEl = document.getElementById(`settings-card-${t}`);
+                    const btnEl = document.getElementById(`settings-subtab-btn-${t}`);
+                    if (cardEl) {
+                        if (t === subTab) cardEl.classList.remove('hidden');
+                        else cardEl.classList.add('hidden');
+                    }
+                    if (btnEl) {
+                        if (t === subTab) {
+                            btnEl.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#5b50e6] text-white shadow-sm transition";
+                        } else {
+                            btnEl.className = "px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition";
+                        }
+                    }
+                });
+
+                const saveBar = document.getElementById('settings-save-bar');
+                if (saveBar) {
+                    if (['roles', 'rates', 'schedule'].includes(subTab)) {
+                        saveBar.classList.remove('hidden');
+                    } else {
+                        saveBar.classList.add('hidden');
+                    }
+                }
+
+                if (subTab === 'broadcast') {
+                    window.fetchBroadcastHistory();
+                }
+                if (subTab === 'announcement') {
+                    window.fetchAnnouncements();
+                }
+            }
+        };
+
+        // 📌 公告資料載入與前端渲染
+        window.fetchAnnouncements = async function() {
+            try {
+                const snap = await getDocs(collection(db, 'announcements'));
+                const list = [];
+                snap.docs.forEach(d => {
+                    list.push({ id: d.id, ...d.data() });
+                });
+
+                // 排序：置頂優先，其次依時間新到舊
+                list.sort((a, b) => {
+                    if (!!b.isPinned !== !!a.isPinned) {
+                        return (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0);
+                    }
+                    return (b.createdAt || '').localeCompare(a.createdAt || '');
+                });
+
+                renderPublicAnnouncementBoard(list);
+                renderAdminAnnouncementTable(list);
+            } catch (err) {
+                console.error("Fetch announcements error:", err);
+            }
+        };
+
+        // 📌 首頁公佈欄渲染（改為「只顯示有置頂」的公告）
+        function renderPublicAnnouncementBoard(list = []) {
+            const boardContainer = document.getElementById('announcement-board-container');
+            const listBody = document.getElementById('announcement-list-body');
+            if (!boardContainer || !listBody) return;
+
+            // 🌟 核心修改：只篩選出有勾選「置頂 (isPinned)」的公告
+            const activeList = list.filter(item => item.isPinned === true);
+
+            if (activeList.length === 0) {
+                boardContainer.classList.add('hidden');
+                return;
+            }
+
+            boardContainer.classList.remove('hidden');
+            
+            // 渲染所有置頂公告項目
+            listBody.innerHTML = activeList.map(item => `
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-3.5 border border-white/15 space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                            <span>${escapeHtml(item.title)}</span>
+                            <span class="text-[9px] bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded">置頂</span>
+                        </span>
+                        <span class="text-[10px] text-indigo-200">${escapeHtml(item.createdAt ? item.createdAt.split('T')[0] : '')}</span>
+                    </div>
+                    <p class="text-xs text-indigo-100 leading-relaxed whitespace-pre-line pl-3.5">${escapeHtml(item.content)}</p>
+                </div>
+            `).join('');
+        }
+
+        // 🌟 後台管理列表渲染（加入發布者 Email 顯示）
+        function renderAdminAnnouncementTable(list = []) {
+            const tbody = document.getElementById('announcement-manage-table-body');
+            if (!tbody) return;
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">尚無任何公告</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(item => {
+                const dateStr = item.createdAt ? item.createdAt.split('T')[0] : '--';
+                const authorEmail = item.authorEmail || '管理員';
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-2.5 px-3">
+                            ${item.isPinned ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">📌 置頂中</span>' : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">一般</span>'}
+                        </td>
+                        <td class="py-2.5 px-3 text-slate-500">${escapeHtml(dateStr)}</td>
+                        <td class="py-2.5 px-3 font-bold text-slate-800">${escapeHtml(item.title)}</td>
+                        <td class="py-2.5 px-3 text-slate-600 max-w-[180px] truncate" title="${escapeHtml(item.content)}">${escapeHtml(item.content)}</td>
+                        <td class="py-2.5 px-3 text-[11px] text-slate-500 whitespace-nowrap">${escapeHtml(authorEmail)}</td>
+                        <td class="py-2.5 px-3 text-center whitespace-nowrap space-x-1">
+                            <button type="button" onclick="window.editAnnouncement('${item.id}', '${escapeHtml(item.title).replace(/'/g, "\\'")}', '${escapeHtml(item.content).replace(/'/g, "\\'")}', ${!!item.isPinned})" class="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-[#5b50e6] font-bold text-xs rounded-lg transition border border-indigo-200">編輯</button>
+                            <button type="button" onclick="window.deleteAnnouncement('${item.id}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs rounded-lg transition border border-rose-200">刪除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 🌟 儲存公告（自動記錄發布者 Email）
+        window.handleSaveAnnouncement = async function(e) {
+            e.preventDefault();
+            if (!isAdmin) return;
+
+            const editId = document.getElementById('announcement-edit-id')?.value;
+            const title = document.getElementById('announcement-input-title')?.value.trim();
+            const content = document.getElementById('announcement-input-content')?.value.trim();
+            const isPinned = document.getElementById('announcement-input-pinned')?.checked;
+            const currentAdminEmail = currentUser ? (currentUser.email || '管理員') : '管理員';
+
+            if (!title || !content) {
+                window.showToast('請填寫公告標題與內容！', 'error');
+                return;
+            }
+
+            try {
+                if (editId) {
+                    await updateDoc(doc(db, 'announcements', editId), {
+                        title,
+                        content,
+                        isPinned,
+                        authorEmail: currentAdminEmail,
+                        updatedAt: new Date().toISOString()
+                    });
+                    window.showToast('🎉 公告更新成功！', 'success');
+                } else {
+                    await addDoc(collection(db, 'announcements'), {
+                        title,
+                        content,
+                        isPinned,
+                        authorEmail: currentAdminEmail,
+                        createdAt: new Date().toISOString()
+                    });
+                    window.showToast('🎉 新公告發布成功！', 'success');
+                }
+
+                window.resetAnnouncementForm();
+                await window.fetchAnnouncements();
+            } catch (err) {
+                console.error("Save announcement error:", err);
+                window.showToast('儲存失敗：' + err.message, 'error');
+            }
+        };
+
+        window.editAnnouncement = function(id, title, content, isPinned) {
+            document.getElementById('announcement-edit-id').value = id;
+            document.getElementById('announcement-input-title').value = title;
+            document.getElementById('announcement-input-content').value = content;
+            document.getElementById('announcement-input-pinned').checked = isPinned;
+            document.getElementById('announcement-cancel-edit-btn').classList.remove('hidden');
+            window.showToast('已載入公告資料至上方表單，修改後點擊儲存即可。', 'info');
+        };
+
+        window.resetAnnouncementForm = function() {
+            document.getElementById('announcement-edit-id').value = '';
+            document.getElementById('announcement-input-title').value = '';
+            document.getElementById('announcement-input-content').value = '';
+            document.getElementById('announcement-input-pinned').checked = true;
+            document.getElementById('announcement-cancel-edit-btn').classList.add('hidden');
+        };
+
+        window.deleteAnnouncement = function(id) {
+            if (!isAdmin) return;
+            window.openCustomActionModal('刪除公告確認', '確定要永久刪除這則公告嗎？', async () => {
+                try {
+                    await deleteDoc(doc(db, 'announcements', id));
+                    window.showToast('已成功刪除公告。', 'success');
+                    await window.fetchAnnouncements();
+                } catch (err) {
+                    window.showToast('刪除失敗：' + err.message, 'error');
+                }
+            });
         };
     </script>
 </body>
