@@ -31,6 +31,19 @@
     </style>
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col justify-between">
+	<div id="app-loading-screen" class="fixed inset-0 z-[99999] bg-[#5b50e6] flex flex-col items-center justify-center text-white space-y-4 transition-opacity duration-300">
+        <div class="w-12 h-12 rounded-2xl bg-white text-[#5b50e6] flex items-center justify-center shadow-xl animate-bounce">
+            <i class="fa-solid fa-basketball text-2xl"></i>
+        </div>
+        <div class="text-center space-y-1">
+            <h2 class="text-lg font-bold tracking-wide">躍動綜合球館</h2>
+            <p class="text-xs text-indigo-200 animate-pulse">正在載入會員與場地狀態...</p>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
+    <header class="bg-[#5b50e6] text-white shadow-md relative z-30">
 
     <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
 
@@ -2404,6 +2417,15 @@
                 }
             } else {
                 window.switchTab('booking'); // 未登入固定為單次預約
+            }
+
+            // 🌟 新增：當身分驗證與資料載入都完成後，平滑隱藏 Loading 遮罩
+            const loadingScreen = document.getElementById('app-loading-screen');
+            if (loadingScreen) {
+                loadingScreen.classList.add('opacity-0', 'pointer-events-none');
+                setTimeout(() => {
+                    loadingScreen.remove(); // 完全從網頁 DOM 移除
+                }, 300);
             }
         }
 
