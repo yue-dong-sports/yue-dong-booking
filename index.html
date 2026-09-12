@@ -169,23 +169,87 @@
                 <p id="vip-weekend-notice-hint" class="hidden font-bold text-purple-700 pt-1 flex items-center gap-1">
                     <span>💎 您好尊貴的 VIP！目前選取為週末，享遠期無限天數即時預約與批量多時段勾選特權。</span>
                 </p>
-                <p id="lottery-draw-date-hint" class="hidden font-bold text-[#5b50e6] pt-1">
-                    🎲 目前選取日期開放登記抽籤，預計於【 <span id="draw-date-val">-----</span> 】由系統自動隨機開獎！
-                </p>
             </div>
         </div>
 
         <!-- TAB 1: 單次預約主畫面 -->
         <div id="tab-booking" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 space-y-6">
-                <!-- 步驟 1: 選擇日期與時段 -->
+                <!-- 步驟 1: 選擇球場類型與模式 -->
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
                     <div class="flex items-center space-x-2 text-slate-800">
                         <span class="w-6 h-6 rounded-full bg-indigo-100 text-[#5b50e6] font-bold text-xs flex items-center justify-center">1</span>
-                        <h2 class="text-base sm:text-lg font-bold">選擇日期與時段</h2>
+                        <h2 class="text-base sm:text-lg font-bold">選擇球場類型</h2>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- 🌟 獨立成全寬左右各半的高對比切換區塊 -->
+                    <div class="grid grid-cols-2 gap-3 p-1.5 bg-slate-100/80 rounded-2xl border border-slate-200">
+                        <button type="button" id="btn-mode-basketball" onclick="window.switchCourtMode('basketball')" class="py-3 px-4 rounded-xl text-sm sm:text-base font-bold transition flex items-center justify-center gap-2 bg-[#5b50e6] text-white shadow-md">
+                            <i class="fa-solid fa-basketball text-lg"></i>
+                            <span>租借籃球全場</span>
+                        </button>
+                        <button type="button" id="btn-mode-badminton" onclick="window.switchCourtMode('badminton')" class="py-3 px-4 rounded-xl text-sm sm:text-base font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50">
+                            <span class="text-lg">🏸</span>
+                            <span>租借羽球場</span>
+                        </button>
+                    </div>
+
+                    <!-- 籃球全場：純說明卡片 -->
+                    <div id="court-view-basketball" class="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100 flex items-center space-x-3 text-slate-700">
+                        <div class="w-10 h-10 rounded-xl bg-white text-[#5b50e6] flex items-center justify-center text-xl shadow-sm flex-shrink-0">
+                            <i class="fa-solid fa-basketball"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-slate-900">籃球全場 (Full Court)</div>
+                            <div class="text-xs text-slate-500">適合正式全場對抗、球隊訓練與大型活動賽事</div>
+                        </div>
+                    </div>
+
+                    <!-- 羽球場：純選擇面數下拉選單 -->
+                    <div id="court-view-badminton" class="hidden p-4 rounded-xl bg-indigo-50/50 border border-indigo-100 space-y-3">
+                        <div class="flex items-center space-x-3 text-slate-700">
+                            <div class="w-10 h-10 rounded-xl bg-white text-[#5b50e6] flex items-center justify-center text-xl shadow-sm flex-shrink-0">
+                                🏸
+                            </div>
+                            <div>
+                                <div class="text-sm font-bold text-slate-900">分區羽球場</div>
+                                <div class="text-xs text-slate-500">標準專用羽球地墊與球網設備</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">請選擇欲租借的面數</label>
+                            <select id="badminton-count-select" onchange="window.handleBadmintonCountChange(this.value)" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:border-[#5b50e6] shadow-sm">
+                                <option value="1">租借 1 面場地</option>
+                                <option value="2">租借 2 面場地</option>
+                                <option value="3">租借 3 面場地</option>
+                                <option value="4">包場 4 面場地</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步驟 2: 選擇預約日期與時段 -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
+                    <div class="flex items-center space-x-2 text-slate-800">
+                        <span class="w-6 h-6 rounded-full bg-indigo-100 text-[#5b50e6] font-bold text-xs flex items-center justify-center">2</span>
+                        <h2 class="text-base sm:text-lg font-bold">選擇預約日期與時段</h2>
+                    </div>
+
+                    <!-- 🌟 0~6 天即時場況快速切換列 -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-500">
+                            <span class="font-bold text-slate-700 flex items-center gap-1">
+                                <i class="fa-solid fa-bolt text-amber-500"></i> 未來 7 天即時剩餘場況 (可點擊切換)
+                            </span>
+                            <span class="text-[11px] text-indigo-600 font-semibold hidden sm:inline">即時預約 (0~6天)</span>
+                        </div>
+                        <div id="quick-date-cards-container" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                            <!-- 由 JavaScript 動態渲染 0~6 天卡片 -->
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">預約日期 (開始)</label>
                             <input type="date" id="booking-date-picker" onchange="window.handleDateChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-[#5b50e6]">
@@ -244,86 +308,15 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 步驟 2: 選擇場地模式與數量 -->
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
-                    <div class="flex items-center space-x-2 text-slate-800">
-                        <span class="w-6 h-6 rounded-full bg-indigo-100 text-[#5b50e6] font-bold text-xs flex items-center justify-center">2</span>
-                        <h2 class="text-base sm:text-lg font-bold">選擇場地模式與數量</h2>
-                    </div>
-
-                    <!-- 🌟 獨立成全寬左右各半的高對比切換區塊 -->
-                    <div class="grid grid-cols-2 gap-3 p-1.5 bg-slate-100/80 rounded-2xl border border-slate-200">
-                        <button type="button" id="btn-mode-basketball" onclick="window.switchCourtMode('basketball')" class="py-3 px-4 rounded-xl text-sm sm:text-base font-bold transition flex items-center justify-center gap-2 bg-[#5b50e6] text-white shadow-md">
-                            <i class="fa-solid fa-basketball text-lg"></i>
-                            <span>租借籃球全場</span>
-                        </button>
-                        <button type="button" id="btn-mode-badminton" onclick="window.switchCourtMode('badminton')" class="py-3 px-4 rounded-xl text-sm sm:text-base font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200/50">
-                            <span class="text-lg">🏸</span>
-                            <span>租借羽球場</span>
-                        </button>
-                    </div>
-
-                    <div class="border-2 border-dashed border-indigo-200 rounded-2xl p-6 bg-indigo-50/20">
-                        <div id="court-view-basketball" class="max-w-md mx-auto">
-                            <div id="court-card-full" class="bg-white border-2 border-[#5b50e6] rounded-2xl p-8 text-center shadow-md relative transition">
-                                <div class="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#5b50e6] text-white flex items-center justify-center text-xs">
-                                    <i class="fa-solid fa-check"></i>
-                                </div>
-                                <div class="w-14 h-14 rounded-full bg-indigo-50 text-[#5b50e6] mx-auto flex items-center justify-center text-2xl mb-3">
-                                    <i class="fa-solid fa-basketball"></i>
-                                </div>
-                                <h3 class="text-lg font-bold text-slate-900">籃球全場 (Full Court)</h3>
-                                <p class="text-xs text-slate-500 mt-1">適合正式全場對抗、球隊訓練、大型活動</p>
-                                <div id="basketball-price-badge" class="mt-4 inline-block px-4 py-1.5 rounded-full bg-indigo-50 text-[#5b50e6] font-extrabold text-sm">
-                                    NT$ 4,400 / 2h
-                                </div>
-                            </div>
-
-                            <div id="court-card-full-full" class="hidden bg-slate-100 border-2 border-slate-300 rounded-2xl p-8 text-center shadow-inner relative">
-                                <div class="w-14 h-14 rounded-full bg-slate-200 text-slate-400 mx-auto flex items-center justify-center text-2xl mb-3">
-                                    <i class="fa-solid fa-ban"></i>
-                                </div>
-                                <h3 class="text-lg font-bold text-slate-600">該時段場地已額滿或衝突</h3>
-                                <p id="basketball-conflict-hint" class="text-xs text-rose-600 font-semibold mt-1">此時段已被預約或衝突，請切換其他時段或日期。</p>
-                            </div>
+                    <!-- 🎲 抽籤時段專屬提示卡片 (選中 7~13 天時自動亮起) -->
+                    <div id="lottery-draw-date-hint" class="hidden p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs flex items-center gap-2.5 text-[#5b50e6] font-bold shadow-sm">
+                        <div class="w-7 h-7 rounded-lg bg-[#5b50e6] text-white flex items-center justify-center text-sm flex-shrink-0 shadow">
+                            <i class="fa-solid fa-dice"></i>
                         </div>
-
-                        <div id="court-view-badminton" class="hidden max-w-md mx-auto space-y-4">
-                            <div id="badminton-available-box" class="bg-white border-2 border-[#5b50e6] rounded-2xl p-6 shadow-md space-y-4">
-                                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-[#5b50e6] flex items-center justify-center font-bold text-lg">
-                                            🏸
-                                        </div>
-                                        <div>
-                                            <h3 class="text-base font-bold text-slate-900">分區羽球場</h3>
-                                            <p id="badminton-price-text" class="text-xs text-slate-500">每面 NT$ 1,100 / 2h</p>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-xs text-slate-500 block">目前可約</span>
-                                        <span id="badminton-remaining-count" class="text-lg font-black text-[#5b50e6]">4 面場地</span>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">請選擇預約面數</label>
-                                    <select id="badminton-count-select" onchange="window.handleBadmintonCountChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:border-[#5b50e6]">
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div id="badminton-full-box" class="hidden bg-slate-100 border-2 border-slate-300 rounded-2xl p-8 text-center shadow-inner relative space-y-2">
-                                <div class="w-14 h-14 rounded-full bg-slate-200 text-slate-400 mx-auto flex items-center justify-center text-2xl">
-                                    <i class="fa-solid fa-ban"></i>
-                                </div>
-                                <h3 class="text-lg font-bold text-slate-600">該時段場地已額滿或衝突</h3>
-                                <p id="badminton-conflict-hint" class="text-xs text-rose-600 font-semibold">本時段 4 面羽球場已被預約完畢，或與籃球場衝突。</p>
-                            </div>
+                        <div class="leading-relaxed">
+                            目前選取日期開放登記抽籤，預計於【 <span id="draw-date-val" class="underline font-black text-indigo-900">-----</span> 】由系統自動隨機開獎！
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -4806,6 +4799,75 @@
             updateSummary();
         };
 
+        // 🌟【新增】渲染 0~6 天快速切換卡片與剩餘場次數量
+        function renderQuickDateCards() {
+            const container = document.getElementById('quick-date-cards-container');
+            if (!container) return;
+
+            const todayStr = getTaiwanDateStr();
+            const dateCards = [];
+
+            for (let i = 0; i <= 6; i++) {
+                const curDate = addDaysToDateStr(todayStr, i);
+                const d = new Date(curDate + 'T00:00:00+08:00');
+                const dayName = WEEKDAYS_NAME[d.getDay()];
+                const isSunOrSat = d.getDay() === 0 || d.getDay() === 6;
+                const isSelected = (curDate === selectedDate);
+
+                // 計算該日所有開放時段中，符合當前球類/面數條件的可約時段數量
+                const openSlots = getCurrentSlots(curDate);
+                let availableSlotsCount = 0;
+
+                openSlots.forEach(slot => {
+                    const avail = getSlotAvailability(curDate, slot.id);
+                    if (courtMode === 'basketball') {
+                        if (avail.basketballAvailable) availableSlotsCount++;
+                    } else {
+                        if (avail.remainingBadmintonCount >= selectedBadmintonCount) {
+                            availableSlotsCount++;
+                        }
+                    }
+                });
+
+                // 剩餘場次狀態標籤樣式
+                let badgeHtml = '';
+                if (openSlots.length === 0) {
+                    badgeHtml = `<span class="text-[10px] text-slate-400 font-bold">休館無時段</span>`;
+                } else if (availableSlotsCount === 0) {
+                    badgeHtml = `<span class="text-[10px] text-rose-600 font-black px-1.5 py-0.5 rounded bg-rose-50 border border-rose-100">已額滿</span>`;
+                } else {
+                    badgeHtml = `<span class="text-[10px] text-emerald-700 font-extrabold px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-100">剩 ${availableSlotsCount} 時段</span>`;
+                }
+
+                const cardSelectedStyle = isSelected
+                    ? 'border-2 border-[#5b50e6] bg-indigo-50/70 shadow-sm ring-2 ring-indigo-200'
+                    : 'border border-slate-200 bg-white hover:border-indigo-300 hover:bg-slate-50';
+
+                dateCards.push(`
+                    <button type="button" onclick="window.selectQuickDate('${curDate}')" class="p-2 rounded-xl text-center flex flex-col items-center justify-between transition min-h-[78px] ${cardSelectedStyle}">
+                        <div class="text-[11px] font-bold ${isSunOrSat ? 'text-rose-600' : 'text-slate-500'}">
+                            週${dayName} ${i === 0 ? '<span class="text-[#5b50e6] font-black">(今天)</span>' : ''}
+                        </div>
+                        <div class="text-xs font-black text-slate-800 my-0.5">
+                            ${curDate.substring(5)}
+                        </div>
+                        <div class="w-full text-center mt-0.5">
+                            ${badgeHtml}
+                        </div>
+                    </button>
+                `);
+            }
+
+            container.innerHTML = dateCards.join('');
+        }
+
+        // 🌟【新增】點擊卡片快速選定日期
+        window.selectQuickDate = function(dateStr) {
+            const datePicker = document.getElementById('booking-date-picker');
+            if (datePicker) datePicker.value = dateStr;
+            window.handleDateChange(dateStr);
+        };
+
         window.handleEndDateChange = function(val) {
             selectedEndDate = val;
             updateSummary();
@@ -5306,6 +5368,9 @@
                     }
                 }
             }
+
+            // 🌟【新增此行】即時更新 0~6 天快速切換卡片與剩餘狀態
+            renderQuickDateCards();
         }
 
         window.submitBookingForm = async function(e) {
