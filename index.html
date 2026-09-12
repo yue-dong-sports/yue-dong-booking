@@ -1527,6 +1527,17 @@
                     登入帳號
                 </button>
             </form>
+
+            <!-- 🌟 Google 快速登入區塊 -->
+            <div class="relative my-2">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+                <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-slate-400">或</span></div>
+            </div>
+
+            <button type="button" onclick="window.handleGoogleLogin()" class="w-full py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-2">
+                <i class="fa-brands fa-google text-rose-500"></i>
+                <span>使用 Google 帳號快速登入</span>
+            </button>
         </div>
     </div>
 
@@ -1682,7 +1693,9 @@
             signOut, 
             onAuthStateChanged,
             sendEmailVerification,
-			sendPasswordResetEmail // 🌟 新增導入發送密碼重設信
+            sendPasswordResetEmail,
+            GoogleAuthProvider,
+            signInWithPopup
         } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { 
             getFirestore, 
@@ -2131,6 +2144,22 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // 🌟 初始化 Google 登入提供者與處理函式
+        const googleProvider = new GoogleAuthProvider();
+
+        window.handleGoogleLogin = async function() {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                window.closeAuthModal();
+                window.showToast(`🎉 登入成功！歡迎 ${result.user.displayName || result.user.email}`, 'success');
+            } catch (err) {
+                console.error("Google login error:", err);
+                if (err.code !== 'auth/popup-closed-by-user') {
+                    window.showToast('Google 登入失敗：' + err.message, 'error');
+                }
+            }
+        };
 
         async function syncUserToFirestore(user, additionalData = {}) {
             if (!user || user.isAnonymous) return;
