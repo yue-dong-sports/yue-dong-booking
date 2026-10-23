@@ -44,10 +44,6 @@
     <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
 
     <header class="bg-[#5b50e6] text-white shadow-md relative z-30">
-
-    <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
-
-    <header class="bg-[#5b50e6] text-white shadow-md relative z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- 上半部：Logo 與 會員/通知功能區 -->
         <div class="h-16 sm:h-20 flex items-center justify-between gap-2 border-b border-white/10 md:border-none">
@@ -1038,28 +1034,76 @@
                         </div>
                         <div>
                             <h3 class="text-sm font-bold text-slate-900">預約時段設定</h3>
-                            <p class="text-[11px] text-slate-500">點擊時段按鈕切換「關閉」➔「🔴 尖峰」➔「🟡 離峰」狀態。</p>
+                            <p class="text-[11px] text-slate-500">點擊時段按鈕切換「關閉」➔「🔴 尖峰」➔「🟡 離峰」；下方標籤可切換該時段限定球種。</p>
                         </div>
                     </div>
 
-                    <div id="settings-weekday-tabs" class="flex flex-wrap gap-2">
+                    <!-- 🌟 模式切換：每週循環 vs 特定單一日期 -->
+                    <div class="flex items-center gap-2 p-1.5 bg-slate-200/70 rounded-xl w-fit">
+                        <button type="button" id="schedule-mode-btn-weekly" onclick="window.switchScheduleSettingMode('weekly')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-[#5b50e6] shadow-sm">
+                            📅 常態每週循環
+                        </button>
+                        <button type="button" id="schedule-mode-btn-specific" onclick="window.switchScheduleSettingMode('specific')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900">
+                            📌 特定單一日期例外
+                        </button>
                     </div>
 
-                    <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                        <div class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                            <i class="fa-solid fa-calendar-day text-[#5b50e6]"></i>
-                            <span>目前編輯：<span id="settings-current-weekday-title" class="text-[#5b50e6] font-extrabold">週一</span></span>
+                    <!-- 常態每週選擇列 -->
+                    <div id="settings-weekly-nav-container">
+                        <div id="settings-weekday-tabs" class="flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <!-- 特定日期選擇列 -->
+                    <div id="settings-specific-nav-container" class="hidden flex flex-wrap items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                        <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                            <i class="fa-regular fa-calendar-check text-[#5b50e6]"></i> 選擇例外日期:
+                            <input type="date" id="settings-specific-date-picker" onchange="window.handleSettingsSpecificDateChange(this.value)" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-bold focus:outline-none focus:border-[#5b50e6]">
+                        </label>
+                        <span id="settings-specific-date-status" class="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 hidden">
+                            已設定專屬例外限制
+                        </span>
+                        <button type="button" id="settings-clear-specific-date-btn" onclick="window.settingsClearSpecificDateOverride()" class="hidden px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs rounded-lg border border-rose-200 transition">
+                            🗑️ 清除此日例外 (還原為每週常態)
+                        </button>
+                    </div>
+
+                    <!-- 快捷操作工具列 (尖離峰 + 球種批次) -->
+                    <div class="flex flex-col gap-2.5 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                            <div class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-calendar-day text-[#5b50e6]"></i>
+                                <span>目前編輯：<span id="settings-current-weekday-title" class="text-[#5b50e6] font-extrabold">週一</span></span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                                <span class="text-slate-400 font-semibold mr-1">時段開放：</span>
+                                <button type="button" onclick="window.settingsSetAllCategory('peak')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-lg border border-rose-200 transition">
+                                    全設為尖峰
+                                </button>
+                                <button type="button" onclick="window.settingsSetAllCategory('offpeak')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold rounded-lg border border-amber-200 transition">
+                                    全設為離峰
+                                </button>
+                                <button type="button" onclick="window.settingsSelectAllHours(false)" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 font-semibold rounded-lg border border-slate-200 transition">
+                                    一鍵全關閉
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="window.settingsSetAllCategory('peak')" class="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs rounded-lg border border-rose-200 transition">
-                                全設為尖峰
-                            </button>
-                            <button type="button" onclick="window.settingsSetAllCategory('offpeak')" class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold text-xs rounded-lg border border-amber-200 transition">
-                                全設為離峰
-                            </button>
-                            <button type="button" onclick="window.settingsSelectAllHours(false)" class="px-3 py-1 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 transition">
-                                一鍵全不選 (關閉)
-                            </button>
+
+                        <!-- 🌟 新增：球種批次功能列 -->
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                            <span class="text-xs text-slate-500 font-bold flex items-center gap-1">
+                                <i class="fa-solid fa-layer-group text-indigo-500"></i> 球種限制批次設定：
+                            </span>
+                            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                                <button type="button" onclick="window.settingsSetAllCourtRestriction('basketball')" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold rounded-lg border border-amber-200 transition flex items-center gap-1">
+                                    🏀 全設僅限籃球
+                                </button>
+                                <button type="button" onclick="window.settingsSetAllCourtRestriction('badminton')" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg border border-indigo-200 transition flex items-center gap-1">
+                                    🏸 全設僅限羽球
+                                </button>
+                                <button type="button" onclick="window.settingsSetAllCourtRestriction('all')" class="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-lg border border-slate-200 transition">
+                                    ⚪ 解除限制 (均開放)
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -1933,18 +1977,23 @@
         let operatingHoursConfig = null;
         let dbOperatingHoursConfig = null;
         let settingsSelectedWeekday = 1;
+        // 🌟 新增：設定模式 ('weekly' 或 'specific') 與選中的特定日期
+        let settingsScheduleMode = 'weekly';
+        let settingsSpecificDate = '';
 
         function getDefaultOperatingHoursConfig() {
             return {
                 schedule: {
-                    0: { openHours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], peakHours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] },
-                    1: { openHours: [18, 19, 20, 21], peakHours: [18, 19, 20, 21] },
-                    2: { openHours: [18, 19, 20, 21], peakHours: [18, 19, 20, 21] },
-                    3: { openHours: [18, 19, 20, 21], peakHours: [18, 19, 20, 21] },
-                    4: { openHours: [18, 19, 20, 21], peakHours: [18, 19, 20, 21] },
-                    5: { openHours: [18, 19, 20, 21], peakHours: [18, 19, 20, 21] },
-                    6: { openHours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], peakHours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] }
+                    0: { openHours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], peakHours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], restrictions: {} },
+                    1: { openHours: [18, 19, 20, 21], peakHours: [18, 19, 20, 21], restrictions: {} },
+                    2: { openHours: [18, 19, 20, 21], peakHours: [18, 19, 20, 21], restrictions: {} },
+                    3: { openHours: [18, 19, 20, 21], peakHours: [18, 19, 20, 21], restrictions: {} },
+                    4: { openHours: [18, 19, 20, 21], peakHours: [18, 19, 20, 21], restrictions: {} },
+                    5: { openHours: [18, 19, 20, 21], peakHours: [18, 19, 20, 21], restrictions: {} },
+                    6: { openHours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], peakHours: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], restrictions: {} }
                 },
+                // 🌟 新增：特定單一日期覆寫清單
+                dateOverrides: {},
                 rates: {
                     baskPeak: 2200,
                     baskOffpeak: 1600,
@@ -1952,6 +2001,33 @@
                     vipDiscountAmount: 0
                 }
             };
+        }
+
+        // 🌟 新增輔助函式：取得指定日期與小時的球種限制 ('all' | 'basketball' | 'badminton')
+        function getHourCourtRestriction(dateStr, hour) {
+            if (!operatingHoursConfig) return 'all';
+
+            // 1. 最高優先：特定日期覆寫
+            if (isValidCalendarDate(dateStr) && operatingHoursConfig.dateOverrides && operatingHoursConfig.dateOverrides[dateStr]) {
+                const overrideObj = operatingHoursConfig.dateOverrides[dateStr];
+                if (overrideObj.restrictions && overrideObj.restrictions[hour]) {
+                    return overrideObj.restrictions[hour];
+                }
+            }
+
+            // 2. 次要優先：每週常態循環
+            if (isValidCalendarDate(dateStr)) {
+                const d = new Date(dateStr + 'T00:00:00+08:00');
+                const dayOfWeek = d.getDay();
+                if (operatingHoursConfig.schedule && operatingHoursConfig.schedule[dayOfWeek]) {
+                    const sch = operatingHoursConfig.schedule[dayOfWeek];
+                    if (sch.restrictions && sch.restrictions[hour]) {
+                        return sch.restrictions[hour];
+                    }
+                }
+            }
+
+            return 'all';
         }
 
         function getRatesConfig() {
@@ -1972,7 +2048,7 @@
             };
         }
 
-        function getDaySchedule(dayOfWeek) {
+        function getDaySchedule(dayOfWeek, dateStr = null) {
             const defaultOpenWeekend = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
             const defaultOpenWeekday = [18, 19, 20, 21];
             const defaultPeak = [18, 19, 20, 21];
@@ -1981,6 +2057,15 @@
             let openHours = weekend ? defaultOpenWeekend : defaultOpenWeekday;
             let peakHours = defaultPeak;
 
+            // 🌟 1. 最高優先：讀取特定單一日期覆寫
+            if (isValidCalendarDate(dateStr) && operatingHoursConfig && operatingHoursConfig.dateOverrides && operatingHoursConfig.dateOverrides[dateStr]) {
+                const overrideObj = operatingHoursConfig.dateOverrides[dateStr];
+                if (Array.isArray(overrideObj.openHours)) openHours = overrideObj.openHours;
+                if (Array.isArray(overrideObj.peakHours)) peakHours = overrideObj.peakHours;
+                return { openHours, peakHours };
+            }
+
+            // 2. 次要優先：每週常態循環排程
             if (operatingHoursConfig) {
                 if (operatingHoursConfig.schedule && operatingHoursConfig.schedule[dayOfWeek]) {
                     const sch = operatingHoursConfig.schedule[dayOfWeek];
@@ -2001,7 +2086,7 @@
             const dayOfWeek = d.getDay();
             const weekend = (dayOfWeek === 0 || dayOfWeek === 6);
 
-            const { openHours } = getDaySchedule(dayOfWeek);
+            const { openHours } = getDaySchedule(dayOfWeek, dateStr);
             if (!openHours || openHours.length === 0) return [];
 
             const hourSet = new Set(openHours);
@@ -2069,7 +2154,7 @@
 
             const d = new Date(dateStr + 'T00:00:00+08:00');
             const dayOfWeek = d.getDay();
-            const { peakHours } = getDaySchedule(dayOfWeek);
+            const { peakHours } = getDaySchedule(dayOfWeek, dateStr);
             const peakSet = new Set(peakHours);
 
             const rates = getRatesConfig();
@@ -4949,14 +5034,33 @@
                 }
             }
 
-            let basketballOccupied = false;
-            let usedBadmintonCourts = [];
+            // 1. 檢查管理者設定的球種限制
+            let isRestrictedForBasketball = false;
+            let isRestrictedForBadminton = false;
+
+            if (targetEndMin > targetStartMin) {
+                let curMin = targetStartMin;
+                while (curMin < targetEndMin) {
+                    const hour = Math.floor(curMin / 60);
+                    const restriction = getHourCourtRestriction(targetDate, hour);
+                    if (restriction === 'badminton') {
+                        isRestrictedForBasketball = true; // 僅限羽球 ➔ 籃球不可預約
+                    } else if (restriction === 'basketball') {
+                        isRestrictedForBadminton = true;  // 僅限籃球 ➔ 羽球不可預約
+                    }
+                    curMin += 30;
+                }
+            }
+
+            // 2. 檢查實際預約佔用情況
+            let hasRealBasketballBooking = false; // 是否真的有人訂了籃球
+            let usedBadmintonCourts = [];        // 被訂走的羽球場清單
 
             dayBookings.forEach(b => {
                 const bInterval = extractTimeIntervalFromItem(b);
                 if (isIntervalOverlap(targetStartMin, targetEndMin, bInterval.startMin, bInterval.endMin)) {
                     if (b.courtMode === 'basketball') {
-                        basketballOccupied = true;
+                        hasRealBasketballBooking = true;
                     } else if (b.courtMode === 'badminton') {
                         if (Array.isArray(b.assignedCourts)) {
                             usedBadmintonCourts.push(...b.assignedCourts);
@@ -4969,7 +5073,7 @@
                 const lInterval = extractTimeIntervalFromItem(l);
                 if (isIntervalOverlap(targetStartMin, targetEndMin, lInterval.startMin, lInterval.endMin)) {
                     if (l.courtMode === 'basketball') {
-                        basketballOccupied = true;
+                        hasRealBasketballBooking = true;
                     } else if (l.courtMode === 'badminton') {
                         if (Array.isArray(l.assignedCourts)) {
                             usedBadmintonCourts.push(...l.assignedCourts);
@@ -4978,12 +5082,19 @@
                 }
             });
 
-            const availableBadminton = ALL_BADMINTON_COURTS.filter(c => !usedBadmintonCourts.includes(c));
+            // 3. 計算籃球是否可借：沒有人預約籃球、沒有人預約羽球、且未限制「僅限羽球」
+            const basketballAvailable = !hasRealBasketballBooking && usedBadmintonCourts.length === 0 && !isRestrictedForBasketball;
+
+            // 4. 計算羽球是否可借：沒有人預約籃球、且未限制「僅限籃球」
+            let availableBadminton = ALL_BADMINTON_COURTS.filter(c => !usedBadmintonCourts.includes(c));
+            if (hasRealBasketballBooking || isRestrictedForBadminton) {
+                availableBadminton = [];
+            }
 
             return {
-                basketballAvailable: !basketballOccupied && usedBadmintonCourts.length === 0,
-                availableBadmintonCourts: basketballOccupied ? [] : availableBadminton,
-                remainingBadmintonCount: basketballOccupied ? 0 : availableBadminton.length
+                basketballAvailable: basketballAvailable,
+                availableBadmintonCourts: availableBadminton,
+                remainingBadmintonCount: availableBadminton.length
             };
         }
 
@@ -6319,9 +6430,82 @@
             if (badmOffpeakInput) badmOffpeakInput.value = Math.round(baskOffpeak / 4);
         };
 
+        // 🌟 取得目前正在編輯的排程物件 (每週常態 or 特定單日)
+        function getCurrentEditingScheduleTarget() {
+            if (!operatingHoursConfig) operatingHoursConfig = getDefaultOperatingHoursConfig();
+            if (!operatingHoursConfig.schedule) operatingHoursConfig.schedule = {};
+            if (!operatingHoursConfig.dateOverrides) operatingHoursConfig.dateOverrides = {};
+
+            if (settingsScheduleMode === 'specific') {
+                if (!settingsSpecificDate) settingsSpecificDate = getTaiwanDateStr();
+                if (!operatingHoursConfig.dateOverrides[settingsSpecificDate]) {
+                    // 若尚未有例外，預設拷貝該星期幾的設定
+                    const d = new Date(settingsSpecificDate + 'T00:00:00+08:00');
+                    const w = d.getDay();
+                    const baseSch = (operatingHoursConfig.schedule && operatingHoursConfig.schedule[w])
+                        ? JSON.parse(JSON.stringify(operatingHoursConfig.schedule[w]))
+                        : { openHours: [], peakHours: [], restrictions: {} };
+                    operatingHoursConfig.dateOverrides[settingsSpecificDate] = baseSch;
+                }
+                const target = operatingHoursConfig.dateOverrides[settingsSpecificDate];
+                if (!target.restrictions) target.restrictions = {};
+                return target;
+            } else {
+                if (!operatingHoursConfig.schedule[settingsSelectedWeekday]) {
+                    operatingHoursConfig.schedule[settingsSelectedWeekday] = { openHours: [], peakHours: [], restrictions: {} };
+                }
+                const target = operatingHoursConfig.schedule[settingsSelectedWeekday];
+                if (!target.restrictions) target.restrictions = {};
+                return target;
+            }
+        }
+
+        window.switchScheduleSettingMode = function(mode) {
+            settingsScheduleMode = mode;
+            const btnWeekly = document.getElementById('schedule-mode-btn-weekly');
+            const btnSpecific = document.getElementById('schedule-mode-btn-specific');
+            const weeklyNav = document.getElementById('settings-weekly-nav-container');
+            const specificNav = document.getElementById('settings-specific-nav-container');
+
+            if (mode === 'weekly') {
+                btnWeekly.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-[#5b50e6] shadow-sm";
+                btnSpecific.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900";
+                weeklyNav?.classList.remove('hidden');
+                specificNav?.classList.add('hidden');
+            } else {
+                btnSpecific.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-[#5b50e6] shadow-sm";
+                btnWeekly.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900";
+                weeklyNav?.classList.add('hidden');
+                specificNav?.classList.remove('hidden');
+
+                if (!settingsSpecificDate) {
+                    settingsSpecificDate = getTaiwanDateStr();
+                }
+                const picker = document.getElementById('settings-specific-date-picker');
+                if (picker) picker.value = settingsSpecificDate;
+            }
+            renderSettingsUI();
+        };
+
+        window.handleSettingsSpecificDateChange = function(val) {
+            if (!isValidCalendarDate(val)) return;
+            settingsSpecificDate = val;
+            renderSettingsUI();
+        };
+
+        window.settingsClearSpecificDateOverride = function() {
+            if (!settingsSpecificDate || !operatingHoursConfig.dateOverrides) return;
+            if (operatingHoursConfig.dateOverrides[settingsSpecificDate]) {
+                delete operatingHoursConfig.dateOverrides[settingsSpecificDate];
+                window.showToast(`已清除 ${settingsSpecificDate} 的專屬例外，還原為每週常態規則。`, 'info');
+                renderSettingsUI();
+            }
+        };
+
         function renderSettingsUI() {
             if (!isAdmin) return;
 
+            // 1. 渲染每週星期幾頁籤
             const tabsContainer = document.getElementById('settings-weekday-tabs');
             if (tabsContainer) {
                 tabsContainer.innerHTML = [1, 2, 3, 4, 5, 6, 0].map(w => {
@@ -6333,43 +6517,80 @@
                 }).join('');
             }
 
-            document.getElementById('settings-current-weekday-title').textContent = `週${WEEKDAYS_NAME[settingsSelectedWeekday]}`;
+            // 2. 標題與例外狀態徽章更新
+            const titleEl = document.getElementById('settings-current-weekday-title');
+            const specificStatusBadge = document.getElementById('settings-specific-date-status');
+            const clearSpecificBtn = document.getElementById('settings-clear-specific-date-btn');
 
+            if (settingsScheduleMode === 'specific') {
+                const d = new Date(settingsSpecificDate + 'T00:00:00+08:00');
+                const dayName = WEEKDAYS_NAME[d.getDay()];
+                if (titleEl) titleEl.textContent = `${settingsSpecificDate} (週${dayName}) [特定日期例外]`;
+
+                const hasOverride = !!(operatingHoursConfig && operatingHoursConfig.dateOverrides && operatingHoursConfig.dateOverrides[settingsSpecificDate]);
+                if (hasOverride) {
+                    specificStatusBadge?.classList.remove('hidden');
+                    clearSpecificBtn?.classList.remove('hidden');
+                } else {
+                    specificStatusBadge?.classList.add('hidden');
+                    clearSpecificBtn?.classList.add('hidden');
+                }
+            } else {
+                if (titleEl) titleEl.textContent = `週${WEEKDAYS_NAME[settingsSelectedWeekday]} [每週常態]`;
+                specificStatusBadge?.classList.add('hidden');
+                clearSpecificBtn?.classList.add('hidden');
+            }
+
+            // 3. 渲染 24 小時方格
             const gridContainer = document.getElementById('settings-hours-grid');
             if (!gridContainer) return;
 
-            if (!operatingHoursConfig) operatingHoursConfig = getDefaultOperatingHoursConfig();
-            
-            const sch = (operatingHoursConfig.schedule && operatingHoursConfig.schedule[settingsSelectedWeekday]) 
-                ? operatingHoursConfig.schedule[settingsSelectedWeekday] 
-                : { openHours: (operatingHoursConfig[settingsSelectedWeekday] || []), peakHours: [18,19,20,21] };
-
+            const sch = getCurrentEditingScheduleTarget();
             const openSet = new Set(sch.openHours || []);
             const peakSet = new Set(sch.peakHours || []);
+            const restrictions = sch.restrictions || {};
 
             let gridHtml = '';
             for (let h = 0; h < 24; h++) {
                 const isOpen = openSet.has(h);
                 const isPeak = peakSet.has(h);
-                
-                let btnClass = 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100';
-                let label = '關閉';
-                
+                const restriction = restrictions[h] || 'all';
+
+                let cardBg = 'bg-slate-50 border-slate-200 text-slate-400';
+                let statusLabel = '關閉';
+
                 if (isOpen) {
                     if (isPeak) {
-                        btnClass = 'bg-rose-50 border-rose-200 text-rose-700 font-bold hover:bg-rose-100';
-                        label = '🔴 尖峰';
+                        cardBg = 'bg-rose-50/70 border-rose-200 text-rose-800';
+                        statusLabel = '🔴 尖峰';
                     } else {
-                        btnClass = 'bg-amber-50 border-amber-200 text-amber-800 font-bold hover:bg-amber-100';
-                        label = '🟡 離峰';
+                        cardBg = 'bg-amber-50/70 border-amber-200 text-amber-900';
+                        statusLabel = '🟡 離峰';
                     }
                 }
 
+                // 球種徽章樣式與說明
+                let sportBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white text-slate-500 border border-slate-200">🟢 均可借</span>`;
+                if (restriction === 'basketball') {
+                    sportBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-400 text-slate-900 shadow-xs">🏀 僅籃球</span>`;
+                } else if (restriction === 'badminton') {
+                    sportBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-[#5b50e6] text-white shadow-xs">🏸 僅羽球</span>`;
+                }
+
                 gridHtml += `
-                    <button type="button" onclick="window.settingsToggleHour(${h})" class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border transition ${btnClass}">
-                        <span class="text-xs font-black mb-1">${String(h).padStart(2, '0')}:00</span>
-                        <span class="text-[10px]">${label}</span>
-                    </button>
+                    <div class="flex flex-col justify-between p-2 rounded-xl border transition shadow-xs ${cardBg}">
+                        <!-- 上半部：切換尖離峰/開放 -->
+                        <button type="button" onclick="window.settingsToggleHour(${h})" class="w-full text-center pb-1.5 border-b border-black/5 hover:opacity-80 transition">
+                            <div class="text-xs font-black tracking-tight">${String(h).padStart(2, '0')}:00</div>
+                            <div class="text-[10px] font-bold mt-0.5">${statusLabel}</div>
+                        </button>
+                        <!-- 下半部：切換限定球種 (點擊循環切換) -->
+                        <div class="pt-1.5 flex justify-center">
+                            <button type="button" onclick="window.settingsCycleHourRestriction(${h})" title="點擊切換限定球種 (均開放 ➔ 僅籃球 ➔ 僅羽球)" class="hover:scale-105 active:scale-95 transition">
+                                ${sportBadge}
+                            </button>
+                        </div>
+                    </div>
                 `;
             }
             gridContainer.innerHTML = gridHtml;
@@ -6381,12 +6602,7 @@
         };
 
         window.settingsToggleHour = function(h) {
-            if (!operatingHoursConfig.schedule) operatingHoursConfig.schedule = {};
-            if (!operatingHoursConfig.schedule[settingsSelectedWeekday]) {
-                operatingHoursConfig.schedule[settingsSelectedWeekday] = { openHours: [], peakHours: [] };
-            }
-            
-            const sch = operatingHoursConfig.schedule[settingsSelectedWeekday];
+            const sch = getCurrentEditingScheduleTarget();
             const openSet = new Set(sch.openHours || []);
             const peakSet = new Set(sch.peakHours || []);
 
@@ -6405,13 +6621,49 @@
             renderSettingsUI();
         };
 
-        window.settingsSetAllCategory = function(cat) {
-            if (!operatingHoursConfig.schedule) operatingHoursConfig.schedule = {};
-            if (!operatingHoursConfig.schedule[settingsSelectedWeekday]) {
-                operatingHoursConfig.schedule[settingsSelectedWeekday] = { openHours: [], peakHours: [] };
+        // 🌟 新增：個別小時循環切換限制 (all ➔ basketball ➔ badminton ➔ all)
+        window.settingsCycleHourRestriction = function(h) {
+            const sch = getCurrentEditingScheduleTarget();
+            const current = (sch.restrictions && sch.restrictions[h]) || 'all';
+
+            let next = 'all';
+            if (current === 'all') next = 'basketball';
+            else if (current === 'basketball') next = 'badminton';
+            else next = 'all';
+
+            if (next === 'all') {
+                delete sch.restrictions[h];
+            } else {
+                sch.restrictions[h] = next;
             }
-            const sch = operatingHoursConfig.schedule[settingsSelectedWeekday];
-            
+            renderSettingsUI();
+        };
+
+        // 🌟 新增：批次設定當日所有開放小時的球種限制
+        window.settingsSetAllCourtRestriction = function(targetRestriction) {
+            const sch = getCurrentEditingScheduleTarget();
+            const openHours = sch.openHours || [];
+
+            if (openHours.length === 0) {
+                window.showToast('⚠️ 目前沒有任何開放時段可套用限制！', 'error');
+                return;
+            }
+
+            if (targetRestriction === 'all') {
+                sch.restrictions = {};
+                window.showToast('已解除當前日程的所有球種限制 (籃羽均可借)。', 'info');
+            } else {
+                openHours.forEach(h => {
+                    sch.restrictions[h] = targetRestriction;
+                });
+                const label = targetRestriction === 'basketball' ? '🏀 僅限籃球' : '🏸 僅限羽球';
+                window.showToast(`已將當前日程所有開放時段批次設為【${label}】！`, 'success');
+            }
+            renderSettingsUI();
+        };
+
+        window.settingsSetAllCategory = function(cat) {
+            const sch = getCurrentEditingScheduleTarget();
             const allHours = Array.from({length: 24}, (_, i) => i);
             sch.openHours = [...allHours];
             if (cat === 'peak') {
@@ -6423,12 +6675,7 @@
         };
 
         window.settingsSelectAllHours = function(isOpen) {
-            if (!operatingHoursConfig.schedule) operatingHoursConfig.schedule = {};
-            if (!operatingHoursConfig.schedule[settingsSelectedWeekday]) {
-                operatingHoursConfig.schedule[settingsSelectedWeekday] = { openHours: [], peakHours: [] };
-            }
-            const sch = operatingHoursConfig.schedule[settingsSelectedWeekday];
-            
+            const sch = getCurrentEditingScheduleTarget();
             if (!isOpen) {
                 sch.openHours = [];
                 sch.peakHours = [];
@@ -6452,6 +6699,19 @@
             adminEmailsList = [...dbAdminEmailsList];
             staffEmailsList = [...dbStaffEmailsList];
             vipEmailsList = [...dbVipEmailsList];
+
+            // 🌟 還原後預設回切到常態每週循環
+            settingsScheduleMode = 'weekly';
+            const btnWeekly = document.getElementById('schedule-mode-btn-weekly');
+            const btnSpecific = document.getElementById('schedule-mode-btn-specific');
+            const weeklyNav = document.getElementById('settings-weekly-nav-container');
+            const specificNav = document.getElementById('settings-specific-nav-container');
+            if (btnWeekly && btnSpecific) {
+                btnWeekly.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition bg-white text-[#5b50e6] shadow-sm";
+                btnSpecific.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900";
+                weeklyNav?.classList.remove('hidden');
+                specificNav?.classList.add('hidden');
+            }
 
             window.showToast('已還原為資料庫當前紀錄！', 'success');
             renderSettingsUI();
@@ -6534,17 +6794,20 @@
                 diffs.push(`💎 VIP 週末籃球每小時折抵金額：NT$ ${oldRates.vipDiscountAmount || 0} ➔ NT$ ${newRates.vipDiscountAmount}`);
             }
 
+            // 🌟 1. 比對每週常態循環設定 (含開放/尖離峰 + 球種限制)
             const weekdaysOrder = [1, 2, 3, 4, 5, 6, 0];
+            const restrNameMap = { all: '均開放', basketball: '僅籃球', badminton: '僅羽球' };
+
             weekdaysOrder.forEach(w => {
                 const dayName = `週${WEEKDAYS_NAME[w]}`;
                 
                 const oldSch = (baseConfig.schedule && baseConfig.schedule[w]) 
                     ? baseConfig.schedule[w] 
-                    : { openHours: (baseConfig[w] || []), peakHours: [18,19,20,21] };
+                    : { openHours: (baseConfig[w] || []), peakHours: [18,19,20,21], restrictions: {} };
                 
                 const newSch = (operatingHoursConfig.schedule && operatingHoursConfig.schedule[w])
                     ? operatingHoursConfig.schedule[w]
-                    : { openHours: [], peakHours: [] };
+                    : { openHours: [], peakHours: [], restrictions: {} };
 
                 const oldOpenSet = new Set(oldSch.openHours || []);
                 const oldPeakSet = new Set(oldSch.peakHours || []);
@@ -6555,10 +6818,43 @@
                     const oldStatus = getHourStatusText(oldOpenSet, oldPeakSet, h);
                     const newStatus = getHourStatusText(newOpenSet, newPeakSet, h);
 
-                    if (oldStatus !== newStatus) {
+                    const oldRestr = (oldSch.restrictions && oldSch.restrictions[h]) || 'all';
+                    const newRestr = (newSch.restrictions && newSch.restrictions[h]) || 'all';
+
+                    // 若時段開關狀態有變，或球種限制有變，即列入異動清單
+                    if (oldStatus !== newStatus || oldRestr !== newRestr) {
                         const startStr = `${String(h).padStart(2, '0')}:00`;
                         const endStr = `${String(h + 1).padStart(2, '0')}:00`;
-                        diffs.push(`📅 ${dayName} ${startStr}~${endStr}：${oldStatus} ➔ ${newStatus}`);
+                        diffs.push(`📅 [每週常態] ${dayName} ${startStr}~${endStr}：${oldStatus} (${restrNameMap[oldRestr] || '均開放'}) ➔ ${newStatus} (${restrNameMap[newRestr] || '均開放'})`);
+                    }
+                }
+            });
+
+            // 🌟 2. 新增：比對特定單一日期例外 (dateOverrides)
+            const oldOverrides = baseConfig.dateOverrides || {};
+            const newOverrides = operatingHoursConfig.dateOverrides || {};
+            const allOverrideDates = new Set([...Object.keys(oldOverrides), ...Object.keys(newOverrides)]);
+
+            allOverrideDates.forEach(dateStr => {
+                const oldItem = oldOverrides[dateStr];
+                const newItem = newOverrides[dateStr];
+
+                if (!oldItem && newItem) {
+                    diffs.push(`📌 [新增特定日例外] ${dateStr}：已套用專屬時段與球種規則`);
+                } else if (oldItem && !newItem) {
+                    diffs.push(`📌 [清除特定日例外] ${dateStr}：還原使用每週常態規則`);
+                } else if (oldItem && newItem) {
+                    // 比對該日內的限制是否有被微調
+                    const oldRestrObj = oldItem.restrictions || {};
+                    const newRestrObj = newItem.restrictions || {};
+                    for (let h = 0; h < 24; h++) {
+                        const rOld = oldRestrObj[h] || 'all';
+                        const rNew = newRestrObj[h] || 'all';
+                        if (rOld !== rNew) {
+                            const startStr = `${String(h).padStart(2, '0')}:00`;
+                            const endStr = `${String(h + 1).padStart(2, '0')}:00`;
+                            diffs.push(`📌 [特定日] ${dateStr} ${startStr}~${endStr} 球種限制：${restrNameMap[rOld] || '均開放'} ➔ ${restrNameMap[rNew] || '均開放'}`);
+                        }
                     }
                 }
             });
